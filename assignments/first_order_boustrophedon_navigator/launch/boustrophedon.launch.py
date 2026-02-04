@@ -9,6 +9,7 @@ def generate_launch_description():
         'config',
         'boustrophedon_params.yaml'
     )
+    print(config)
     
     return LaunchDescription([
         # Start the turtlesim node
