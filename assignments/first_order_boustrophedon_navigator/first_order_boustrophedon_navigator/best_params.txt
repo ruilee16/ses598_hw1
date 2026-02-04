@@ -1,2 +1,2 @@
-Best parameters: {'Kp_linear': 0, 'Kd_linear': 0, 'Kp_angular': 0, 'Kd_angular': 0}
+Best parameters: {'Kp_linear': 5, 'Kd_linear': 0.366, 'Kp_angular': 9.2, 'Kd_angular': 0.83}
 Best average cross-track error: 0

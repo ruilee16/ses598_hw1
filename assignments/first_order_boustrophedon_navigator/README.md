@@ -23,6 +23,15 @@ cd ~/ros2_ws
 colcon build --packages-select first_order_boustrophedon_navigator
 ```
 
+adjust parameters on the fly:
+```bash
+ros2 param set /lawnmower_controller Kd_angular 4.0
+ros2 param set /lawnmower_controller Kp_angular 4.5
+ros2 param set /lawnmower_controller Kp_linear 1.0
+ros2 param set /lawnmower_controller Kd_linear 0.5
+
+
+```
 
 ## Background
 Boustrophedon patterns (from Greek: "ox-turning", like an ox drawing a plow) are fundamental coverage survey trajectories useful in space exploration and Earth observation. These patterns are useful for:

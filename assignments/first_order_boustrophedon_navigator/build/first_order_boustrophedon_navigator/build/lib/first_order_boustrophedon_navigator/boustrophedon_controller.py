@@ -16,7 +16,7 @@ from textwrap import fill
 class BoustrophedonController(Node):
     def __init__(self):
         super().__init__('lawnmower_controller')
-        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V4.5*****")
+        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V4.4*****")
 
         # Declare parameters with default values
         self.declare_parameters(
@@ -37,7 +37,7 @@ class BoustrophedonController(Node):
         self.Kd_angular = self.get_parameter('Kd_angular').value
         self.spacing = self.get_parameter('spacing').value
 
-        self.get_logger().info(f"Model Parameters:  Kp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f},  Kp_angular: {self.Kp_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
+        self.get_logger().info(f"Model Parameters: /n/nKp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, /n/nKp_angular: {self.Kp_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
 )
         # Add parameter callback
         self.add_on_set_parameters_callback(self.parameter_callback)
@@ -394,22 +394,22 @@ class BoustrophedonController(Node):
         corner_summary = "\n".join(corner_summary_lines) if corner_summary_lines else "No corner metrics"
 
         summary_text = [
-            f"*****SUMMARY*****",
-            f"Model Parameters:  Kp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f},  Kp_angular: {self.Kp_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}",
-            f"Average CTE = {avg_cte:.4f} m ",
-            f"Maximum CTE = {max_cte:.4f} m ",
-            f"Smoothness = {smoothness_rms_jerk:.6g} ",
-            f"{'(computed from linear v; ' + smooth_desc + ')'} ",
-            f"Corner count = {corner_count} ",
-            f"{cornering_desc} ",
-            f"{corner_summary} ",
-            "Notes: ",
-            "- Smoothness metric: RMS of turtle (d^2 v / dt^2). Lower is smoother. ",
+            f"*****SUMMARY*****/n/n",
+            f"Model Parameters: /n/nKp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, /n/nKp_angular: {self.Kp_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}",
+            f"Average CTE = {avg_cte:.4f} m/n/n",
+            f"Maximum CTE = {max_cte:.4f} m/n/n",
+            f"Smoothness = {smoothness_rms_jerk:.6g}/n/n",
+            f"{'(computed from linear v; ' + smooth_desc + ')'}/n/n",
+            f"Corner count = {corner_count}/n/n",
+            f"{cornering_desc}/n/n",
+            f"{corner_summary}/n/n",
+            "Notes:/n/n",
+            "- Smoothness metric: RMS of turtle (d^2 v / dt^2). Lower is smoother./n/n",
             "- Cornering: a_lat ~ v * yaw_rate (approx). Lower peak a_lat and lower corner CTE are better.",
         ]
 
         # Place summary textbox on the figure (right side)
-        axs[1, 1].text(0.02, 0.02, fill(''.join(summary_text), width=50), fontsize=10, va='bottom', ha='left',
+        axs[1, 1].text(0.02, 0.02, fill(''.join(summary_text), width=50), fontsize=10, va='top', ha='left',
                 bbox=dict(facecolor='white', alpha=0.9, edgecolor='black'))
 
         # Save files
