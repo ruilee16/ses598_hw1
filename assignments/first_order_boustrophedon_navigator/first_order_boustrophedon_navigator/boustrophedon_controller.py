@@ -33,7 +33,7 @@ class BoustrophedonController(Node):
         # Get initial parameter values
         self.Kp_linear = self.get_parameter('Kp_linear').value
         self.Kd_linear = self.get_parameter('Kd_linear').value
-        self.Kp_angular = self.get_parameter('Kp_angular').value
+        self.Kp_angular = 2 #self.get_parameter('Kp_angular').value
         self.Kd_angular = self.get_parameter('Kd_angular').value
         self.spacing = self.get_parameter('spacing').value
 
