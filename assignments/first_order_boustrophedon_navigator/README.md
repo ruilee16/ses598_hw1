@@ -67,12 +67,13 @@ After a two-stage tuning process involving automated optimization and manual ref
 | **Max Lateral Accel**<br>*(`max_a_lat`)* | **54.375** | **4856.461** | **1092.420** |
 
 ### Data Analysis
-
-*   **Accuracy vs. Stability Trade-off**
 *   **Baseline(The Spiral):** The data shows a very low **Smoothness score (3.037)**, indicating the robot moved very smoothly. However, the **Average CTE (1.0003 m)** is massive, quantitatively confirming the robot failed to track the path entirely (spiraling outward).
 *   **Final:** The high gains (`Kp_angular`: 9.0) successfully forced the **Average CTE down to ~0.08 m** , meaning the robot stayed tightly on the line. However, the **Smoothness score spiked to ~18-20**, confirming the "shaking" behavior observed in the trajectory plots.
 
-![alt text for image 1](results/1/summary_1.png) ![alt text for image 2](results/1/summary_2.png) ![alt text for image 3](results/1/summary_3.png)
+### Result Plots 
+![alt text for image 1](results/1/summary_1.png) 
+![alt text for image 2](results/2/summary_2.png) 
+![alt text for image 3](results/3/summary_3.png)
 
 
 ## Tuning Methodology
