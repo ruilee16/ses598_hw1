@@ -239,6 +239,7 @@ class BoustrophedonController(Node):
             compute per-corner max lateral acceleration (a_lat = v * yaw_rate) and CTE during corner.
         Saves: "summary_plots.png", plus the individual PNGs.
         """
+        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V2 *****")
 
 
         # Convert to numpy arrays (safe if lists)

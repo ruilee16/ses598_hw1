@@ -7,6 +7,16 @@ In this assignment, you will understand the provided code in ROS2 with Turtlesim
 
 Modify the code to meet the requirements for a uniform survey. 
 
+## RL: to run
+```bash
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+
+ros2 launch first_order_boustrophedon_navigator boustrophedon.launch.py
+ros2 topic echo /cross_track_error
+ros2 run rqt_plot rqt_plot
+```
+
 ## Background
 Boustrophedon patterns (from Greek: "ox-turning", like an ox drawing a plow) are fundamental coverage survey trajectories useful in space exploration and Earth observation. These patterns are useful for:
 
