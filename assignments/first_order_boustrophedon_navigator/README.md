@@ -43,10 +43,10 @@ After a two-stage tuning process involving automated optimization and manual ref
 ## Performance Metrics & Analysis
 
 ### Trajectory Comparison
-*   **Baseline (Figure 1):** With default parameters ($K_p=1.0$), the robot failed to close the loop on turns, resulting in an infinite "Spiral of Death" where the turn radius exceeded the lane spacing.
+*   **Baseline (Figure 1):** With default parameters, the robot failed to close the loop on turns, resulting in an infinite "Spiral of Death" where the turn radius exceeded the lane spacing.
 **Figure 1: Baseline**
 ![Baseline](pic/0.png)
-*   **Manual tunning process (Figure 2):** With default parameters ($K_p=1.0$), the robot failed to close the loop on turns, resulting in an infinite "Spiral of Death" where the turn radius exceeded the lane spacing.
+*   **Manual tunning process (Figure 2):** With best parameters got from the optimizer, the robot failed to close the loop on turns, resulting in an infinite "Spiral of Death" where the turn radius exceeded the lane spacing. After manual tuning on the fly of the simulation, the robot found ways to survey the field.
 **Figure 2: Tuning**
 ![process](pic/2.png)
 *   **Optimized (Figure 2):** With the final tuned parameters, the robot successfully executes 180-degree turns within the 0.5m spacing constraint, producing a clean Boustrophedon (lawnmower) pattern.
@@ -57,7 +57,7 @@ After a two-stage tuning process involving automated optimization and manual ref
 *   **Velocity Profile:** The robot maintains a consistent speed on straights and executes rapid, high-velocity rotations (spikes in angular velocity) to maintain the path.
 *   **Profile Through 3 Patterns:** 
 
-| Metric | **Summary 1** (Baseline) | **Summary 2** (High Gain A) | **Summary 3** (High Gain B) |
+| Metric | **Baseline** | **Manual Tuning** | **Final**|
 | :--- | :--- | :--- | :--- |
 | **Model Parameters** | `Kp_lin`: 1.0, `Kd_lin`: 0.1<br>`Kp_ang`: 1.0, `Kd_ang`: 0.1 | `Kp_lin`: 5.0, `Kd_lin`: 0.5<br>`Kp_ang`: 9.0, `Kd_ang`: 0.1 | `Kp_lin`: 5.0, `Kd_lin`: 0.5<br>`Kp_ang`: 9.0, `Kd_ang`: 0.1 |
 | **Average CTE** | **1.0003 m** | **0.0866 m** | **0.0828 m** |
@@ -68,17 +68,11 @@ After a two-stage tuning process involving automated optimization and manual ref
 
 ### Data Analysis
 
-**1. Accuracy vs. Stability Trade-off**
-*   **Summary 1 (The Spiral):** The data shows a very low **Smoothness score (3.037)** [1], indicating the robot moved very smoothly. However, the **Average CTE (1.0003 m)** is massive, quantitatively confirming the robot failed to track the path entirely (spiraling outward).
-*   **Summary 2 & 3 (The Shaking Rectangle):** The high gains (`Kp_angular`: 9.0) successfully forced the **Average CTE down to ~0.08 m** [2, 3], meaning the robot stayed tightly on the line. However, the **Smoothness score spiked to ~18-20**, confirming the "shaking" behavior observed in the trajectory plots.
+*   **Accuracy vs. Stability Trade-off**
+*   **Baseline(The Spiral):** The data shows a very low **Smoothness score (3.037)**, indicating the robot moved very smoothly. However, the **Average CTE (1.0003 m)** is massive, quantitatively confirming the robot failed to track the path entirely (spiraling outward).
+*   **Final:** The high gains (`Kp_angular`: 9.0) successfully forced the **Average CTE down to ~0.08 m** , meaning the robot stayed tightly on the line. However, the **Smoothness score spiked to ~18-20**, confirming the "shaking" behavior observed in the trajectory plots.
 
-**2. Turning Capability (Corner Count)**
-*   **Summary 1:** Detected only **1 corner** [1]. Due to the low angular gain ($K_p=1.0$), the robot's physical turn radius exceeded the lane spacing, causing it to miss the waypoints entirely.
-*   **Summary 2 & 3:** Detected **33 corners** [2, 3], indicating the full Boustrophedon pattern was successfully navigated.
-
-**3. The "Twist" (Lateral Acceleration)**
-*   **Summary 2** records an extreme **Max Lateral Acceleration of 4856.461** [2]. This correlates with the violent "twisting" issue discussed during tuning. The high `Kp_angular` (9.0) combined with insufficient damping (`Kd_angular`: 0.1) caused rapid oscillations at the corners.
-*   **Summary 3** shows the same parameters but a lower (though still high) acceleration (~1092) [3], likely due to slight variations in the simulation noise or initial conditions, but it remains significantly higher than the baseline, confirming the system was under-damped.
+![alt text for image 1](results/1/summary_1.png) ![alt text for image 2](results/1/summary_2.png) ![alt text for image 3](results/1/summary_3.png)
 
 
 ## Tuning Methodology
