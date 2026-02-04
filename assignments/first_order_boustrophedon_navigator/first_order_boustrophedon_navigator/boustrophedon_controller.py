@@ -16,7 +16,8 @@ from textwrap import fill
 class BoustrophedonController(Node):
     def __init__(self):
         super().__init__('lawnmower_controller')
-        
+        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V2 *****")
+
         # Declare parameters with default values
         self.declare_parameters(
             namespace='',
@@ -349,38 +350,38 @@ class BoustrophedonController(Node):
             cornering_desc = "Cornering not computed (no velocity samples)."
 
         # --- Plotting: single figure with 3 subplots ---
-        fig, axs = plt.subplots(3, 1, figsize=(10, 14), constrained_layout=True)
+        fig, axs = plt.subplots(2, 2, figsize=(10, 14), constrained_layout=True)
 
         # 1) CTE plot
-        axs[0].plot(times if times.size>0 else np.arange(len(cte)), cte, label='Cross-Track Error')
-        axs[0].set_title("Cross-Track Error Over Time")
-        axs[0].set_xlabel("Time (s) / Time step")
-        axs[0].set_ylabel("CTE (m)")
-        axs[0].grid(True)
+        axs[0, 0].plot(times if times.size>0 else np.arange(len(cte)), cte, label='Cross-Track Error')
+        axs[0, 0].set_title("Cross-Track Error Over Time")
+        axs[0, 0].set_xlabel("Time (s) / Time step")
+        axs[0, 0].set_ylabel("CTE (m)")
+        axs[0, 0].grid(True)
 
         # 2) Trajectory plot
         if trajectory.size > 0:
-            axs[1].plot(trajectory[:, 0], trajectory[:, 1], label="Trajectory")
+            axs[0, 1].plot(trajectory[:, 0], trajectory[:, 1], label="Trajectory")
             if hasattr(self, 'waypoints') and len(self.waypoints) > 0:
                 wp_x = [wp[0] for wp in self.waypoints]
                 wp_y = [wp[1] for wp in self.waypoints]
-                axs[1].scatter(wp_x, wp_y, c='red', label='Waypoints', s=30, zorder=3)
-        axs[1].set_title("Trajectory Plot")
-        axs[1].set_xlabel("X (m)")
-        axs[1].set_ylabel("Y (m)")
-        axs[1].legend()
-        axs[1].axis('equal')
-        axs[1].grid(True)
+                axs[0, 1].scatter(wp_x, wp_y, c='red', label='Waypoints', s=30, zorder=3)
+        axs[0, 1].set_title("Trajectory Plot")
+        axs[0, 1].set_xlabel("X (m)")
+        axs[0, 1].set_ylabel("Y (m)")
+        axs[0, 1].legend()
+        axs[0, 1].axis('equal')
+        axs[0, 1].grid(True)
 
         # 3) Velocity profiles
         if velocities.size > 0:
-            axs[2].plot(velocities[:, 0], label="Linear Velocity (v)")
-            axs[2].plot(velocities[:, 1], label="Angular Velocity (yaw_rate)")
-        axs[2].set_title("Velocity Profiles")
-        axs[2].set_xlabel("Time step")
-        axs[2].set_ylabel("Velocity (m/s or rad/s)")
-        axs[2].legend()
-        axs[2].grid(True)
+            axs[1, 0].plot(velocities[:, 0], label="Linear Velocity (v)")
+            axs[1, 0].plot(velocities[:, 1], label="Angular Velocity (yaw_rate)")
+        axs[1, 0].set_title("Velocity Profiles")
+        axs[1, 0].set_xlabel("Time step")
+        axs[1, 0].set_ylabel("Velocity (m/s or rad/s)")
+        axs[1, 0].legend()
+        axs[1, 0].grid(True)
 
         # --- Prepare summary text (metrics) for annotation ---
         # Build corner summary string (brief)
@@ -391,20 +392,21 @@ class BoustrophedonController(Node):
         corner_summary = "\n".join(corner_summary_lines) if corner_summary_lines else "No corner metrics"
 
         summary_text = (
-            f"Average CTE = {avg_cte:.4f} m\n"
+            f"Model Parameters: \nKp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, Kp_angular: {self.Kd_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
+            f"Average CTE = {avg_cte:.4f} m\n\n"
             f"Maximum CTE = {max_cte:.4f} m\n\n"
-            f"Smoothness (RMS jerk) = {smoothness_rms_jerk:.6g}\n"
+            f"Smoothness = {smoothness_rms_jerk:.6g}\n"
             f"{'(computed from linear v; ' + smooth_desc + ')'}\n\n"
             f"Corner count = {corner_count}\n"
             f"{cornering_desc}\n"
             f"{corner_summary}\n\n"
             "Notes:\n"
-            "- Smoothness metric: RMS of jerk (d^2 v / dt^2). Lower is smoother.\n"
+            "- Smoothness metric: RMS of turtle (d^2 v / dt^2). Lower is smoother.\n"
             "- Cornering: a_lat ~ v * yaw_rate (approx). Lower peak a_lat and lower corner CTE are better."
         )
 
         # Place summary textbox on the figure (right side)
-        fig.text(0.02, 0.02, fill(summary_text, width=60), fontsize=9, va='bottom', ha='left',
+        axs[1, 1].text(0.02, 0.02, fill(summary_text, width=60), fontsize=9, va='bottom', ha='left',
                 bbox=dict(facecolor='white', alpha=0.9, edgecolor='black'))
 
         # Save files
