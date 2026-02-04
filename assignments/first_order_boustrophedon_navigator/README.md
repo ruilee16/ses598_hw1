@@ -57,6 +57,30 @@ After a two-stage tuning process involving automated optimization and manual ref
 *   **Velocity Profile:** The robot maintains a consistent speed on straights and executes rapid, high-velocity rotations (spikes in angular velocity) to maintain the path.
 *   **Profile Through 3 Patterns:** 
 
+| Metric | **Summary 1** (Baseline) | **Summary 2** (High Gain A) | **Summary 3** (High Gain B) |
+| :--- | :--- | :--- | :--- |
+| **Model Parameters** | `Kp_lin`: 1.0, `Kd_lin`: 0.1<br>`Kp_ang`: 1.0, `Kd_ang`: 0.1 | `Kp_lin`: 5.0, `Kd_lin`: 0.5<br>`Kp_ang`: 9.0, `Kd_ang`: 0.1 | `Kp_lin`: 5.0, `Kd_lin`: 0.5<br>`Kp_ang`: 9.0, `Kd_ang`: 0.1 |
+| **Average CTE** | **1.0003 m** | **0.0866 m** | **0.0828 m** |
+| **Maximum CTE** | 2.1034 m | 0.2007 m | 0.2045 m |
+| **Smoothness**<br>*(RMS Jerk, lower is better)* | **3.037** | **18.067** | **20.565** |
+| **Corner Count** | 1 | 33 | 33 |
+| **Max Lateral Accel**<br>*(`max_a_lat`)* | **54.375** | **4856.461** | **1092.420** |
+
+### Data Analysis
+
+**1. Accuracy vs. Stability Trade-off**
+*   **Summary 1 (The Spiral):** The data shows a very low **Smoothness score (3.037)** [1], indicating the robot moved very smoothly. However, the **Average CTE (1.0003 m)** is massive, quantitatively confirming the robot failed to track the path entirely (spiraling outward).
+*   **Summary 2 & 3 (The Shaking Rectangle):** The high gains (`Kp_angular`: 9.0) successfully forced the **Average CTE down to ~0.08 m** [2, 3], meaning the robot stayed tightly on the line. However, the **Smoothness score spiked to ~18-20**, confirming the "shaking" behavior observed in the trajectory plots.
+
+**2. Turning Capability (Corner Count)**
+*   **Summary 1:** Detected only **1 corner** [1]. Due to the low angular gain ($K_p=1.0$), the robot's physical turn radius exceeded the lane spacing, causing it to miss the waypoints entirely.
+*   **Summary 2 & 3:** Detected **33 corners** [2, 3], indicating the full Boustrophedon pattern was successfully navigated.
+
+**3. The "Twist" (Lateral Acceleration)**
+*   **Summary 2** records an extreme **Max Lateral Acceleration of 4856.461** [2]. This correlates with the violent "twisting" issue discussed during tuning. The high `Kp_angular` (9.0) combined with insufficient damping (`Kd_angular`: 0.1) caused rapid oscillations at the corners.
+*   **Summary 3** shows the same parameters but a lower (though still high) acceleration (~1092) [3], likely due to slight variations in the simulation noise or initial conditions, but it remains significantly higher than the baseline, confirming the system was under-damped.
+
+
 ## Tuning Methodology
 
 ### 1. Automated Optimization (boustrophedon_optimizer.py)
