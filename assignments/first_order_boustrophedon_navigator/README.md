@@ -17,6 +17,13 @@ ros2 topic echo /cross_track_error
 ros2 run rqt_plot rqt_plot
 ```
 
+after update code:
+```bash
+cd ~/ros2_ws
+colcon build --packages-select first_order_boustrophedon_navigator
+```
+
+
 ## Background
 Boustrophedon patterns (from Greek: "ox-turning", like an ox drawing a plow) are fundamental coverage survey trajectories useful in space exploration and Earth observation. These patterns are useful for:
 

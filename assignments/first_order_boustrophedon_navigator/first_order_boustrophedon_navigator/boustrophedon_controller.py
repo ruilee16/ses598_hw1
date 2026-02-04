@@ -16,7 +16,7 @@ from textwrap import fill
 class BoustrophedonController(Node):
     def __init__(self):
         super().__init__('lawnmower_controller')
-        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V2 *****")
+        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V4.1*****")
 
         # Declare parameters with default values
         self.declare_parameters(
@@ -29,14 +29,16 @@ class BoustrophedonController(Node):
                 ('spacing', 0.5)
             ]
         )
-
+        
         # Get initial parameter values
         self.Kp_linear = self.get_parameter('Kp_linear').value
         self.Kd_linear = self.get_parameter('Kd_linear').value
         self.Kp_angular = self.get_parameter('Kp_angular').value
         self.Kd_angular = self.get_parameter('Kd_angular').value
         self.spacing = self.get_parameter('spacing').value
-        
+
+        self.get_logger().info(f"Model Parameters: <br>Kp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, <br>Kp_angular: {self.Kd_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
+)
         # Add parameter callback
         self.add_on_set_parameters_callback(self.parameter_callback)
         
@@ -240,7 +242,7 @@ class BoustrophedonController(Node):
             compute per-corner max lateral acceleration (a_lat = v * yaw_rate) and CTE during corner.
         Saves: "summary_plots.png", plus the individual PNGs.
         """
-        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V2 *****")
+        self.get_logger().info("***** RUNNING UPDATED CONTROLLER: V3*****")
 
 
         # Convert to numpy arrays (safe if lists)
@@ -392,16 +394,17 @@ class BoustrophedonController(Node):
         corner_summary = "\n".join(corner_summary_lines) if corner_summary_lines else "No corner metrics"
 
         summary_text = (
-            f"Model Parameters: \nKp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, Kp_angular: {self.Kd_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
-            f"Average CTE = {avg_cte:.4f} m\n\n"
-            f"Maximum CTE = {max_cte:.4f} m\n\n"
-            f"Smoothness = {smoothness_rms_jerk:.6g}\n"
-            f"{'(computed from linear v; ' + smooth_desc + ')'}\n\n"
-            f"Corner count = {corner_count}\n"
-            f"{cornering_desc}\n"
-            f"{corner_summary}\n\n"
-            "Notes:\n"
-            "- Smoothness metric: RMS of turtle (d^2 v / dt^2). Lower is smoother.\n"
+            f"*****SUMMARY*****<br>"
+            f"Model Parameters: <br>Kp_linear: {self.Kp_linear:.1f}, Kd_linear: {self.Kd_linear:.1f}, <br>Kp_angular: {self.Kd_angular:.1f}, Kd_angular: {self.Kd_angular:.1f}"
+            f"Average CTE = {avg_cte:.4f} m<br>"
+            f"Maximum CTE = {max_cte:.4f} m<br>"
+            f"Smoothness = {smoothness_rms_jerk:.6g}<br>"
+            f"{'(computed from linear v; ' + smooth_desc + ')'}<br>"
+            f"Corner count = {corner_count}<br>"
+            f"{cornering_desc}<br>"
+            f"{corner_summary}<br>"
+            "Notes:<br>"
+            "- Smoothness metric: RMS of turtle (d^2 v / dt^2). Lower is smoother.<br>"
             "- Cornering: a_lat ~ v * yaw_rate (approx). Lower peak a_lat and lower corner CTE are better."
         )
 
