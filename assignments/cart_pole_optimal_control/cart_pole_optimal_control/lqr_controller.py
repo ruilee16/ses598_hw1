@@ -171,35 +171,73 @@ class CartPoleLQRController(Node):
             self.get_logger().error(f'Control loop error: {e}')
 
     def plot_results(self):
-        """Generate plots for analysis."""
+        """Generate plots with performance metrics."""
+        # Convert to numpy arrays
+        x = np.array(self.cart_positions)
+        theta = np.array(self.pole_angles)
+        u = np.array(self.control_forces)
+        t = np.array(self.time_steps)
+
+        # ---- Compute Metrics ----
+        max_x = np.max(np.abs(x))
+        rms_x = np.sqrt(np.mean(x**2))
+
+        max_theta = np.max(np.abs(theta))
+        rms_theta = np.sqrt(np.mean(theta**2))
+
+        max_u = np.max(np.abs(u))
+
+        constraint_violation = max_x > 2.5
+
+        # ---- Plotting ----
         plt.figure(figsize=(12, 10))
-        
+
+        # 1️⃣ Cart Position
         plt.subplot(2, 2, 1)
-        plt.plot(self.time_steps, self.cart_positions, label='Cart Position (m)', color='b')
+        plt.plot(t, x, label='Cart Position (m)', color='b')
+        plt.axhline(2.5, linestyle='--', color='k', alpha=0.5)
+        plt.axhline(-2.5, linestyle='--', color='k', alpha=0.5)
+        plt.title(f"Max: {max_x:.2f} m | RMS: {rms_x:.2f} m")
         plt.xlabel('Time (s)')
         plt.ylabel('Cart Position (m)')
         plt.legend()
-        
+
+        # 2️⃣ Pole Angle
         plt.subplot(2, 2, 2)
-        plt.plot(self.time_steps, self.pole_angles, label='Pole Angle (°)', color='r')
+        plt.plot(t, theta, label='Pole Angle (°)', color='r')
+        plt.title(f"Max: {max_theta:.2f}° | RMS: {rms_theta:.2f}°")
         plt.xlabel('Time (s)')
         plt.ylabel('Pole Angle (°)')
         plt.legend()
-        
+
+        # 3️⃣ Earthquake Force
         plt.subplot(2, 2, 3)
-        plt.plot(self.time_steps, self.earthquake_forces, label='Earthquake Force (N)', color='g')
+        plt.plot(t, self.earthquake_forces, label='Earthquake Force (N)', color='g')
         plt.xlabel('Time (s)')
         plt.ylabel('Earthquake Force (N)')
         plt.legend()
-        
+
+        # 4️⃣ Control Force
         plt.subplot(2, 2, 4)
-        plt.plot(self.time_steps, self.control_forces, label='Control Force (N)', color='m')  # Changed 'p' to 'm' (magenta)
+        plt.plot(t, u, label='Control Force (N)', color='m')
+        plt.title(f"Peak Control: {max_u:.2f} N")
         plt.xlabel('Time (s)')
         plt.ylabel('Control Force (N)')
         plt.legend()
 
+        # Overall Summary Text
+        summary_text = (
+            f"Constraint Violated: {constraint_violation}\n"
+            f"Max Cart = {max_x:.2f} m\n"
+            f"Max Angle = {max_theta:.2f}°\n"
+            f"Peak Control = {max_u:.2f} N"
+        )
+
+        plt.gcf().text(0.5, 0.02, summary_text, ha='center', fontsize=10)
+
         plt.tight_layout()
         plt.show()
+
 
 
 def main(args=None):
