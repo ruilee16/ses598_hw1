@@ -1,32 +1,6 @@
 # Cart-Pole Optimal Control Assignment
 
-[Watch the demo video](https://drive.google.com/file/d/1UEo88tqG-vV_pkRSoBF_-FWAlsZOLoIb/view?usp=sharing)
-![image](https://github.com/user-attachments/assets/c8591475-3676-4cdf-8b4a-6539e5a2325f)
-<img width="1069" height="1069" alt="Cart pole Gazebo" src="https://github.com/user-attachments/assets/e9d3abde-4290-46af-bc15-c4a2ad407bea" />
-
-## Overview
-This assignment challenges students to tune and analyze an LQR controller for a cart-pole system subject to earthquake disturbances. The goal is to maintain the pole's stability while keeping the cart within its physical constraints under external perturbations. The earthquake force generator in this assignment introduces students to simulating and controlling systems under seismic disturbances, which connects to the Virtual Shake Robot covered later in the course. The skills developed here in handling dynamic disturbances and maintaining system stability will be useful for optimal control of space robots, such as Lunar landers or orbital debris removal robots.
-
-## RL
-start with a clean ROS env
-```bash
-unset AMENT_PREFIX_PATH
-unset PYTHONPATH
-unset COLCON_PREFIX_PATH
-```
-install packages:
-```bash
-# configure repos (only if you haven't already — follow ROS jazzy apt setup)
-sudo apt update
-
-# attempt to install the ros_gz vendor metapackage (replace $ROS_DISTRO if needed)
-sudo apt install ros-$ROS_DISTRO-ros-gz
-sudo apt install ros-jazzy-ros-gz-sim
-```
 ## Simulation Report
-
-# LQR Control of Cart-Pole System Under Earthquake Disturbances
-
 ## 1. Introduction
 
 This project evaluates a Linear Quadratic Regulator (LQR) controller
@@ -183,6 +157,23 @@ cart position constraints, highlighting a limitation of pure LQR without
 additional constraint handling or state augmentation.
 
 ------------------------------------------------------------------------
+
+## RL notes
+start with a clean ROS env
+```bash
+unset AMENT_PREFIX_PATH
+unset PYTHONPATH
+unset COLCON_PREFIX_PATH
+```
+install packages:
+```bash
+# configure repos (only if you haven't already — follow ROS jazzy apt setup)
+sudo apt update
+
+# attempt to install the ros_gz vendor metapackage (replace $ROS_DISTRO if needed)
+sudo apt install ros-$ROS_DISTRO-ros-gz
+sudo apt install ros-jazzy-ros-gz-sim
+```
 
 End of Report
 
