@@ -23,264 +23,166 @@ sudo apt update
 sudo apt install ros-$ROS_DISTRO-ros-gz
 sudo apt install ros-jazzy-ros-gz-sim
 ```
+## Simulation Report
 
-## System Description
-The assignment is based on the problem formalism here: https://underactuated.mit.edu/acrobot.html#cart_pole
-### Physical Setup
-- Inverted pendulum mounted on a cart
-- Cart traversal range: ±2.5m (total range: 5m)
-- Pole length: 1m
-- Cart mass: 1.0 kg
-- Pole mass: 1.0 kg
+# LQR Control of Cart-Pole System Under Earthquake Disturbances
 
-### Disturbance Generator
-The system includes an earthquake force generator that introduces external disturbances:
-- Generates continuous, earthquake-like forces using superposition of sine waves
-- Base amplitude: 15.0N (default setting)
-- Frequency range: 0.5-4.0 Hz (default setting)
-- Random variations in amplitude and phase
-- Additional Gaussian noise
+## 1. Introduction
 
-## Assignment Objectives
+This project evaluates a Linear Quadratic Regulator (LQR) controller
+applied to a cart-pole system in a ROS2 + Gazebo simulation environment
+under earthquake disturbances.
 
-### Core Requirements
-1. Analyze and tune the provided LQR controller to:
-   - Maintain the pendulum in an upright position
-   - Keep the cart within its ±2.5m physical limits
-   - Achieve stable operation under earthquake disturbances
-2. Document your LQR tuning approach:
-   - Analysis of the existing Q and R matrices
-   - Justification for any tuning changes made
-   - Analysis of performance trade-offs
-   - Experimental results and observations
-3. Analyze system performance:
-   - Duration of stable operation
-   - Maximum cart displacement
-   - Pendulum angle deviation
-   - Control effort analysis
+The system state vector is defined as:
 
-### Learning Outcomes
-- Understanding of LQR control parameters and their effects
-- Experience with competing control objectives
-- Analysis of system behavior under disturbances
-- Practical experience with ROS2 and Gazebo simulation
+x = $x, x', \theta, \theta'$
 
-### Extra Credit Options
-Students can implement reinforcement learning for extra credit (up to 30 points):
+Where: - x: Cart position (m) - x': Cart velocity (m/s) - $\theta$: Pole
+angle (deg in plots) - $\theta'$: Pole angular velocity
 
-1. Reinforcement Learning Implementation:
-   - Implement a basic DQN (Deep Q-Network) controller
-   - Train the agent to stabilize the pendulum
-   - Compare performance with the LQR controller
-   - Document training process and results
-   - Create training progress visualizations
-   - Analyze and compare performance with LQR
+### Control Objectives
 
-## Implementation
+1.  Maintain the pendulum in the upright position\
+2.  Keep the cart within ±2.5 m physical limits\
+3.  Achieve stable operation under earthquake disturbances
 
-### Controller Description
-The package includes a complete LQR controller implementation (`lqr_controller.py`) with the following features:
-- State feedback control
-- Configurable Q and R matrices
-- Real-time force command generation
-- State estimation and processing
+------------------------------------------------------------------------
 
-Current default parameters:
-```python
-# State cost matrix Q (default values)
-Q = np.diag([1.0, 1.0, 10.0, 10.0])  # [x, x_dot, theta, theta_dot]
+## 2. LQR Design
 
-# Control cost R (default value)
-R = np.array([[0.1]])  # Control effort cost
-```
+The LQR cost function is defined as:
 
-### Earthquake Disturbance
-The earthquake generator (`earthquake_force_generator.py`) provides realistic disturbances:
-- Configurable through ROS2 parameters
-- Default settings:
-  ```python
-  parameters=[{
-      'base_amplitude': 15.0,    # Strong force amplitude (N)
-      'frequency_range': [0.5, 4.0],  # Wide frequency range (Hz)
-      'update_rate': 50.0  # Update rate (Hz)
-  }]
-  ```
+J = ∫ (x\^T Q x + u\^T R u) dt
 
-## Getting Started
+Where:
 
-### Prerequisites
-- ROS2 Humble or Jazzy
-- Gazebo Garden
-- Python 3.8+
-- Required Python packages: numpy, scipy
+Q = $(q1, q2, q3, q4)$
+R = scalar control penalty
 
-#### Installation Commands
-```bash
-# Set ROS_DISTRO as per your configuration
-export ROS_DISTRO=humble
+Different Q weight configurations were tested to understand performance
+trade-offs between stability, tracking, and control effort.
 
-# Install ROS2 packages
-sudo apt update
-sudo apt install -y \
-    ros-$ROS_DISTRO-ros-gz-bridge \
-    ros-$ROS_DISTRO-ros-gz-sim \
-    ros-$ROS_DISTRO-ros-gz-interfaces \
-    ros-$ROS_DISTRO-robot-state-publisher \
-    ros-$ROS_DISTRO-rviz2
+------------------------------------------------------------------------
 
-# Install Python dependencies
-pip3 install numpy scipy control
-```
+## 3. Documenting the LQR Tuning Approach
+Based on the cost function $J$, we incrementally applied a heavy penalty (weight = 100) to individual states in the $Q$ matrix to observe the system's behavioral trade-offs.
 
-### Repository Setup
+*   **Baseline ($Q=(1,1,1,1)$):** Failed to prioritize any state. The system quickly lost control, exhibiting a massive pendulum deviation that dragged the cart into the limits.
+*   **Penalizing Cart Position $x$ ($Q=(100, 1,1,1)$):** The controller prioritized keeping the cart centered over balancing the pole. While it survived longer (~12.5s) than the baseline, the cart was forced into extreme oscillations, eventually hitting the 2.5m limit.
+*   **Penalizing Pole Angle $\theta$ ($Q=(1,1,100,1)$):** The controller prioritized perfectly vertical pole alignment. Because the earthquake constantly perturbated the pole, the cart was forced to move violently to compensate, causing it to crash into the boundary at ~2.7s.
+*   **Penalizing Pole Velocity $\dot{\theta}$ ($Q=(1,1,1,100)$):** Trying to stop the pole from rotating caused a similarly aggressive reaction from the cart, leading to failure at ~4.0s.
+*   **Penalizing Cart Velocity $\dot{x}$ ($Q=(1,100,1,1,)$):** This approach introduced necessary "damping" into the LQR cost function. By penalizing the speed of the cart, the controller naturally smoothed out its responses to the high-frequency earthquake vibrations. This prevented runaway oscillations and provided the optimal trade-off between balancing the pole and restricting cart displacement.
 
-#### If you already have a fork of the course repository:
-```bash
-# Navigate to your local copy of the repository
-cd ~/RAS-SES-598-Space-Robotics-and-AI
+------------------------------------------------------------------------
 
-# Add the original repository as upstream (if not already done)
-git remote add upstream https://github.com/DREAMS-lab/ses598-space-robotics-and-ai-2026
-# Fetch the latest changes from upstream
-git fetch upstream
+## 4. System Performance Analysis
+The experimental results yielded the following precise performance metrics:
 
-# Checkout your main branch
-git checkout main
+| Tuning Configuration | Penalty Focus | Stable Duration | Max Displacement (Limit 2.5m) | Max Pendulum Angle | Peak Control Effort |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **`default`**  | None | ~2.4 s | 2.50 m (Failure) | 34.84° | 111.24 N |
+| **`q_100_1_1_1`**  | Cart Pos ($x$) | ~12.5 s | 2.50 m (Failure) | 22.02° | 127.45 N |
+| **`q_1_100_1_1`** | **Cart Vel ($\dot{x}$)**| **120.0 s (Stable)**| **0.57 m (Stable)** | **7.13°** | **46.52 N** |
+| **`q_1_1_100_1`**  | Pole Angle ($\theta$) | ~2.7 s | 2.50 m (Failure) | 22.26° | 102.00 N |
+| **`q_1_1_1_100`**  | Pole Vel ($\dot{\theta}$) | ~4.0 s | 2.50 m (Failure) | 8.22° | 59.11 N |
 
-# Merge upstream changes
-git merge upstream/main
+Noticeably, the optimal configuration (`q_1_100_1_1`) not only achieved total stability but also required the lowest peak control force (46.52 N). This means it was the most energy-efficient control law, preventing the actuator saturation seen in the failing configurations.
 
-# Push the updates to your fork
-git push origin main
-```
+------------------------------------------------------------------------
 
-#### If you don't have a fork yet:
-1. Fork the course repository:
-   - Visit: https://github.com/DREAMS-lab/ses598-space-robotics-and-ai-2026
-   - Click "Fork" in the top-right corner
-   - Select your GitHub account as the destination
+## 5. Detailed Case Result
 
-2. Clone your fork:
-```bash
-cd ~/
-git clone https://github.com/YOUR_USERNAME/ses598-space-robotics-and-ai-2026
-```
 
-### Create Symlink to ROS2 Workspace
-```bash
-# Create symlink in your ROS2 workspace
-cd ~/ros2_ws/src
-ln -s ~/ses598-space-robotics-and-ai-2026/assignments/cart_pole_optimal_control .
-```
+### Case 1: Baseline Configuration
 
-### Building and Running
-```bash
-# Build the package
-cd ~/ros2_ws
-colcon build --packages-select cart_pole_optimal_control --symlink-install
+Q = (1,1,1,1)
 
-# Source the workspace
-source install/setup.bash
+-   Max cart displacement: 2.50 m (boundary reached)
+-   RMS cart position: 0.95 m
+-   Max pole angle: 34.84°
+-   RMS pole angle: 12.76°
+-   Peak control force: 111.24 N
 
-# Launch the simulation with visualization
-ros2 launch cart_pole_optimal_control cart_pole_rviz.launch.py
-```
+**Observation:**
+Applying equal weights is entirely insufficient for continuous disturbance rejection, causing the system to fail at approximately 2.4 seconds. The controller loses control of the pendulum almost immediately, resulting in massive pole angle deviations and a rapid crash into the physical limits.
+![default result](default_result.png)
 
-This will start:
-- Gazebo simulation (headless mode)
-- RViz visualization showing:
-  * Cart-pole system
-  * Force arrows (control and disturbance forces)
-  * TF frames for system state
-- LQR controller
-- Earthquake force generator
-- Force visualizer
+------------------------------------------------------------------------
 
-### Visualization Features
-The RViz view provides a side perspective of the cart-pole system with:
+### Case 2: High Cart Velocity Weight
 
-#### Force Arrows
-Two types of forces are visualized:
-1. Control Forces (at cart level):
-   - Red arrows: Positive control force (right)
-   - Blue arrows: Negative control force (left)
+Q = (1,100,1,1)
 
-2. Earthquake Disturbances (above cart):
-   - Orange arrows: Positive disturbance (right)
-   - Purple arrows: Negative disturbance (left)
+-   Max cart displacement: 0.57 m
+-   RMS cart position: 0.20 m
+-   Max pole angle: 7.13°
+-   RMS pole angle: 3.02°
+-   Peak control force: 46.52 N
 
-Arrow lengths are proportional to force magnitudes.
+**Observation:**
+The system remained stable for the full 120-second duration. Both cart displacement and pole deviation were significantly reduced. Control effort remained moderate, requiring the lowest peak force among all cases. This configuration provided necessary damping, showing strong disturbance rejection and balanced behavior.
+![Case 2 result](q_1_100_1_1.png)
 
-## Analysis Requirements
+------------------------------------------------------------------------
 
-### Performance Metrics
-Students should analyze:
-1. Stability Metrics:
-   - Maximum pole angle deviation
-   - RMS cart position error
-   - Peak control force used
-   - Recovery time after disturbances
+### Case 3: High Angular Velocity Weight
 
-2. System Constraints:
-   - Cart position limit: ±2.5m
-   - Control rate: 50Hz
-   - Pole angle stability
-   - Control effort efficiency
+Q = (1,1,1,100)
 
-### Analysis Guidelines
-1. Baseline Performance:
-   - Document system behavior with default parameters
-   - Identify key performance bottlenecks
-   - Analyze disturbance effects
+-   Max cart displacement: 2.50 m (physical boundary reached)
+-   RMS cart position: 1.03 m
+-   Max pole angle: 8.22°
+-   RMS pole angle: 3.67°
+-   Peak control force: 59.11 N
 
-2. Parameter Effects:
-   - Analyze how Q matrix weights affect different states
-   - Study R value's impact on control aggressiveness
-   - Document trade-offs between objectives
+**Observation:**
+The system failed and hit the physical boundary at approximately 4.0 seconds. While attempting to stop the pole from rotating kept the angle relatively small, it caused the cart to drift and eventually reach its physical limits. Emphasizing angular velocity alone does not prevent long-term drift under continuous disturbances.
+![Case 3 result](q_1_1_1_100.png)
 
-3. Disturbance Response:
-   - Characterize system response to different disturbance frequencies
-   - Analyze recovery behavior
-   - Study control effort distribution
+------------------------------------------------------------------------
 
-## Evaluation Criteria
-### Core Assignment (100 points)
-1. Analysis Quality (40 points)
-   - Depth of parameter analysis
-   - Quality of performance metrics
-   - Understanding of system behavior
+### Case 4: High Cart Position Weight
 
-2. Performance Results (30 points)
-   - Stability under disturbances
-   - Constraint satisfaction
-   - Control efficiency
+Q = (100,1,1,1)
 
-3. Documentation (30 points)
-   - Clear analysis presentation
-   - Quality of data and plots
-   - Thoroughness of discussion
+-   Max cart displacement: 2.50 m (boundary reached)
+-   RMS cart position: 1.06 m
+-   Max pole angle: 22.02°
+-   RMS pole angle: 7.67°
+-   Peak control force: 127.45 N
 
-### Extra Credit (up to 30 points)
-- Reinforcement Learning Implementation (30 points)
+**Observation:**
+The system survived longer than the baseline but eventually failed around 12.5 seconds. Prioritizing keeping the cart centered forced extreme cart oscillations to compensate, leading to large pole deviations. This configuration required the highest peak control force of all tests.
+![Case 4 result](q_100_1_1_1.png)
 
-## Tips for Success
-1. Start with understanding the existing controller behavior
-2. Document baseline performance thoroughly
-3. Make systematic parameter adjustments
-4. Keep detailed records of all tests
-5. Focus on understanding trade-offs
-6. Use visualizations effectively
+------------------------------------------------------------------------
 
-## Submission Requirements
-1. Technical report including:
-   - Analysis of controller behavior
-   - Performance data and plots
-   - Discussion of findings
-2. Video demonstration of system performance
-3. Any additional analysis tools or visualizations created
+### Case 5: High Pole Angle Weight
 
-## Acknowledgements: Aldrin Inbaraj A, Arizona State University. 
+Q = (1,1,100,1)
 
-## License
-This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
-[![Creative Commons License](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/) 
+-   Max cart displacement: 2.50 m (boundary reached)
+-   RMS cart position: 1.08 m
+-   Max pole angle: 22.26°
+-   RMS pole angle: 8.70°
+-   Peak control force: 102.00 N
+
+**Observation:**
+The system failed rapidly at roughly 2.7 seconds. Increasing the pole angle weight caused overly aggressive control actions by the cart in an attempt to keep the pole perfectly vertical during the earthquake. Large control forces were exerted, directly leading to rapid boundary excursions.
+![Case 5 result](q_1_1_100_1.png)
+
+------------------------------------------------------------------------
+
+## 6. Conclusion
+
+The experiments demonstrate that LQR performance strongly depends on the
+relative weighting of state variables in the Q matrix. Under earthquake
+disturbances, prioritizing angular velocity provided the most stable and
+energy-efficient behavior. However, no configuration perfectly enforced
+cart position constraints, highlighting a limitation of pure LQR without
+additional constraint handling or state augmentation.
+
+------------------------------------------------------------------------
+
+End of Report
+
