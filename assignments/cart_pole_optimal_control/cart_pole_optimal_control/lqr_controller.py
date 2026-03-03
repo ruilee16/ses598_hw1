@@ -35,7 +35,7 @@ class CartPoleLQRController(Node):
         ])
         
         # LQR cost matrices
-        self.Q = np.diag([1.0, 1.0, 1.0, 1.0])  # State cost
+        self.Q = np.diag([1.0, 1.0, 1.0, 100.0])  # State cost [x, x_dot, theta, theta_dot]
         self.R = np.array([[1.0]])  # Control cost
         
         # Compute LQR gain matrix
@@ -224,17 +224,6 @@ class CartPoleLQRController(Node):
         plt.xlabel('Time (s)')
         plt.ylabel('Control Force (N)')
         plt.legend()
-
-        # Overall Summary Text
-        summary_text = (
-            f"Constraint Violated: {constraint_violation}\n"
-            f"Max Cart = {max_x:.2f} m\n"
-            f"Max Angle = {max_theta:.2f}°\n"
-            f"Peak Control = {max_u:.2f} N"
-        )
-
-        plt.gcf().text(0.5, 0.02, summary_text, ha='center', fontsize=10)
-
         plt.tight_layout()
         plt.show()
 
